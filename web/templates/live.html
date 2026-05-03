@@ -1,12 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Live</h1>
-<p class="lead muted">Recognition runs on the server camera stream (boxes drawn in-frame).</p>
 
-<div class="live-wrap">
-  <div class="live-frame">
-    <img src="/stream" alt="Live camera" width="640" height="480" />
+<p class="lead muted">
+  <strong>This device</strong> uses your phone or laptop camera in the browser and sends frames to the PC for recognition.
+  <strong>Server PC</strong> uses the camera attached to the machine running the app (OpenCV).
+</p>
+
+<div class="live-mode card">
+  <div class="row inline">
+    <label><input type="radio" name="live_mode" value="device" checked /> This device</label>
+    <label><input type="radio" name="live_mode" value="server" /> Server PC camera</label>
   </div>
-  <p class="live-caption">If the stream is blank, check camera permissions and <a href="/settings">camera index</a>. {% if not model_ok %}Train a model under Members first.{% endif %}</p>
 </div>
+
+<div id="device-live" class="live-wrap">
+  <div class="video-wrap">
+    <video id="live-video" playsinline muted autoplay></video>
+    <canvas id="live-overlay" class="live-overlay" aria-hidden="true"></canvas>
+  </div>
+  <p id="live-status" class="live-caption"></p>
+  <p class="live-caption hint">
+    If the camera stays blank on a phone over Wi‑Fi, the browser may require <strong>HTTPS</strong> for camera access (localhost is exempt).
+    {% if not model_ok %}Train people under Members first.{% endif %}
+  </p>
+</div>
+
+<div id="server-live" class="live-wrap" hidden>
+  <div class="live-frame">
+    <img src="/stream" alt="Server camera stream" width="640" height="480" />
+  </div>
+  <p class="live-caption">
+    Stream comes from the PC running <code>run_gui.py</code>. Adjust <a href="/settings">camera index</a> there.
+    {% if not model_ok %}Train a model under Members first.{% endif %}
+  </p>
+</div>
+
+<script src="/static/live.js" defer></script>
 {% endblock %}

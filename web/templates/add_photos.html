@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add photos</h1>
+<p class="lead muted">More training images for <strong>{{ folder }}</strong>.</p>
+
+{% if error %}
+<div class="alert error">{{ error }}</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="card">
+  <fieldset class="upload-zone">
+    <legend>Photos</legend>
+    <input type="file" name="files" multiple accept="image/*,.zip,application/zip" required />
+    <p class="hint">PNG, JPEG, WebP, BMP, or a zip of images.</p>
+  </fieldset>
+  <div class="stack-actions">
+    <button type="submit">Find faces</button>
+    <a class="btn ghost" href="/members">Back</a>
+  </div>
+</form>
+{% endblock %}

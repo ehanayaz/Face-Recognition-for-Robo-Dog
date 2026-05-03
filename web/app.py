@@ -16,8 +16,14 @@ from typing import Any
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -93,6 +99,20 @@ def make_class_folder(role: str, display_name: str) -> str:
         slug = "person"
     prefix = "owner" if role == "owner" else "member"
     return f"{prefix}_{slug}"
+
+
+def _safe_member_folder(folder: str) -> Path | None:
+    """Return resolved dataset subfolder if it exists and stays under DATASET_DIR."""
+    if not folder or ".." in folder or "/" in folder or "\\" in folder:
+        return None
+    path = (DATASET_DIR / folder).resolve()
+    try:
+        path.relative_to(DATASET_DIR.resolve())
+    except ValueError:
+        return None
+    if not path.is_dir():
+        return None
+    return path
 
 
 def _extract_faces_from_image(
@@ -370,6 +390,76 @@ async def enroll_post(request: Request):
             "class_folder": class_folder,
             "crop_names": crops,
             "created": time.time(),
+            "extend": False,
+        }
+
+    return RedirectResponse(f"/enroll/review/{enroll_id}", status_code=303)
+
+
+@app.get("/members/{folder}/photos", response_class=HTMLResponse)
+async def add_photos_get(request: Request, folder: str):
+    if _safe_member_folder(folder) is None:
+        raise HTTPException(404, "Member not found.")
+    return templates.TemplateResponse(
+        request,
+        "add_photos.html",
+        {
+            "request": request,
+            "title": "Add photos",
+            "folder": folder,
+            "error": None,
+        },
+    )
+
+
+@app.post("/members/{folder}/photos", response_class=HTMLResponse)
+async def add_photos_post(request: Request, folder: str):
+    member_path = _safe_member_folder(folder)
+    if member_path is None:
+        raise HTTPException(404, "Member not found.")
+
+    form = await request.form()
+    raw_files = form.getlist("files")
+    files = [f for f in raw_files if getattr(f, "filename", None)]
+    if not files:
+        return templates.TemplateResponse(
+            request,
+            "add_photos.html",
+            {
+                "request": request,
+                "title": "Add photos",
+                "folder": folder,
+                "error": "Please choose at least one image or a .zip file.",
+            },
+            status_code=400,
+        )
+
+    settings = load_settings()
+    margin = float(settings.get("crop_margin", 0.25))
+    square = bool(settings.get("square_crop", False))
+
+    enroll_id = uuid.uuid4().hex
+    crops = await process_uploads_to_crops(enroll_id, files, margin, square)
+    if not crops:
+        shutil.rmtree(TEMP_ENROLL_DIR / enroll_id, ignore_errors=True)
+        return templates.TemplateResponse(
+            request,
+            "add_photos.html",
+            {
+                "request": request,
+                "title": "Add photos",
+                "folder": folder,
+                "error": "No faces detected. Try clearer front-facing photos.",
+            },
+            status_code=400,
+        )
+
+    with _pending_lock:
+        _pending_enroll[enroll_id] = {
+            "class_folder": folder,
+            "crop_names": crops,
+            "created": time.time(),
+            "extend": True,
         }
 
     return RedirectResponse(f"/enroll/review/{enroll_id}", status_code=303)
@@ -382,6 +472,8 @@ async def enroll_review(request: Request, enroll_id: str):
     if not data:
         raise HTTPException(404, "Review session expired or invalid.")
     crops = data["crop_names"]
+    extend = bool(data.get("extend", False))
+    cancel_href = "/members" if extend else "/enroll?role=owner"
     return templates.TemplateResponse(
         request,
         "enroll_review.html",
@@ -391,6 +483,8 @@ async def enroll_review(request: Request, enroll_id: str):
             "enroll_id": enroll_id,
             "class_folder": data["class_folder"],
             "crops": crops,
+            "extend": extend,
+            "cancel_href": cancel_href,
         },
     )
 
@@ -552,6 +646,59 @@ async def live_page(request: Request):
         request,
         "live.html",
         {"request": request, "title": "Live", "model_ok": model_ok},
+    )
+
+
+@app.post("/api/analyze_frame")
+async def analyze_frame(file: UploadFile = File(...)):
+    """
+    Run face detection + PCA on one JPEG/PNG frame from the browser camera.
+    Coordinates match the uploaded image pixel dimensions.
+    """
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(400, "Empty body")
+    img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        raise HTTPException(400, "Could not decode image")
+    h0, w0 = img.shape[:2]
+
+    model = get_model()
+    settings = load_settings()
+    thr = effective_threshold(
+        settings,
+        model.suggested_threshold if model else None,
+    )
+
+    if model is None:
+        return JSONResponse(
+            {
+                "faces": [],
+                "width": w0,
+                "height": h0,
+                "no_model": True,
+            }
+        )
+
+    cascade = _get_cascade()
+    results = run_frame(model, img, cascade, thr)
+    faces = []
+    for r in results:
+        x, y, w, h = r.face_bbox
+        faces.append(
+            {
+                "x": int(x),
+                "y": int(y),
+                "w": int(w),
+                "h": int(h),
+                "identity": r.identity_folder,
+                "role": r.role,
+                "distance": float(r.distance),
+                "unknown": r.is_unknown,
+            }
+        )
+    return JSONResponse(
+        {"faces": faces, "width": w0, "height": h0, "no_model": False}
     )
 
 

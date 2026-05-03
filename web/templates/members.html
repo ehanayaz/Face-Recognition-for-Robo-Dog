@@ -17,9 +17,12 @@
       <span class="muted"> · {{ m.role }}</span>
       <span class="muted"> · {{ m.count }} image(s)</span>
     </div>
-    <form method="post" action="/members/delete/{{ m.folder }}" style="margin:0;" onsubmit="return confirm('Remove {{ m.folder }} and all training images?');">
-      <button type="submit" class="danger">Remove</button>
-    </form>
+    <div class="member-actions">
+      <a class="btn ghost" href="/members/{{ m.folder }}/photos">Add photos</a>
+      <form method="post" action="/members/delete/{{ m.folder }}" style="margin:0;" onsubmit="return confirm('Remove {{ m.folder }} and all training images?');">
+        <button type="submit" class="danger">Remove</button>
+      </form>
+    </div>
   </li>
   {% endfor %}
 </ul>

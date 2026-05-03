@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Review faces</h1>
+{% if extend %}
+<p class="lead muted">Adding to <strong>{{ class_folder }}</strong>. Uncheck any face to skip.</p>
+{% else %}
 <p class="lead">Saving to folder <strong>{{ class_folder }}</strong>. Uncheck faces you do not want to keep.</p>
+{% endif %}
 
 <form method="post" action="/enroll/confirm">
   <input type="hidden" name="enroll_id" value="{{ enroll_id }}" />
@@ -19,7 +23,7 @@
   </div>
   <div class="stack-actions">
     <button type="submit">Save selected &amp; train</button>
-    <a class="btn ghost" href="/enroll?role=owner">Back</a>
+    <a class="btn ghost" href="{{ cancel_href }}">{% if extend %}Back to members{% else %}Back{% endif %}</a>
   </div>
 </form>
 {% endblock %}
