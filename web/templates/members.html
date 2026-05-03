@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Members</h1>
+
+{% if saved %}
+<div class="alert ok">Faces saved and model updated.</div>
+{% endif %}
+
+{% if not members %}
+<p class="lead muted">No people enrolled yet. <a href="/enroll?role=owner">Add owner</a> or <a href="/enroll?role=member">member</a>.</p>
+{% else %}
+<ul class="members card">
+  {% for m in members %}
+  <li>
+    <div>
+      <strong>{{ m.folder }}</strong>
+      <span class="muted"> · {{ m.role }}</span>
+      <span class="muted"> · {{ m.count }} image(s)</span>
+    </div>
+    <form method="post" action="/members/delete/{{ m.folder }}" style="margin:0;" onsubmit="return confirm('Remove {{ m.folder }} and all training images?');">
+      <button type="submit" class="danger">Remove</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

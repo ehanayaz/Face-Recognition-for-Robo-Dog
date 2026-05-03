@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Live</h1>
+<p class="lead muted">Recognition runs on the server camera stream (boxes drawn in-frame).</p>
+
+<div class="live-wrap">
+  <div class="live-frame">
+    <img src="/stream" alt="Live camera" width="640" height="480" />
+  </div>
+  <p class="live-caption">If the stream is blank, check camera permissions and <a href="/settings">camera index</a>. {% if not model_ok %}Train a model under Members first.{% endif %}</p>
+</div>
+{% endblock %}

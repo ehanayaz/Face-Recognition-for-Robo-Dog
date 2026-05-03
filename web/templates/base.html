@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% if title %}{{ title }} · {% endif %}Face PCA</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="site">
+    <div class="inner">
+      <a class="brand" href="/">PCA Face</a>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/enroll?role=owner">Add owner</a>
+        <a href="/enroll?role=member">Add member</a>
+        <a href="/members">Members</a>
+        <a href="/live">Live</a>
+        <a href="/settings">Settings</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

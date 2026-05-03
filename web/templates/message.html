@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="alert {% if level == 'warn' %}error{% else %}ok{% endif %}">{{ message }}</div>
+<p><a href="/">Home</a></p>
+{% endblock %}

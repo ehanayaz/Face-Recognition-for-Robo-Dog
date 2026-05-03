@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Settings</h1>
+
+{% if request.query_params.get("ok") %}
+<div class="alert ok">Settings saved.</div>
+{% endif %}
+
+<form method="post" action="/settings" class="card">
+  <div class="row">
+    <label for="k">PCA components (K)</label>
+    <input type="number" id="k" name="k" min="1" value="{{ settings.k }}" />
+  </div>
+  <div class="row">
+    <label for="distance_threshold">Distance threshold (leave empty to use model suggestion)</label>
+    <input type="text" id="distance_threshold" name="distance_threshold" placeholder="{% if suggested_threshold %}{{ suggested_threshold | round(1) }}{% endif %}" value="{{ settings.distance_threshold or '' }}" />
+    {% if suggested_threshold %}
+    <p class="hint">Last trained suggestion: {{ suggested_threshold | round(2) }}</p>
+    {% endif %}
+  </div>
+  <div class="row">
+    <label for="camera_index">Camera index</label>
+    <input type="number" id="camera_index" name="camera_index" min="0" value="{{ settings.camera_index }}" />
+  </div>
+  <div class="row">
+    <label for="crop_margin">Enrollment crop margin (0–0.5)</label>
+    <input type="text" id="crop_margin" name="crop_margin" value="{{ settings.crop_margin }}" />
+  </div>
+  <div class="row inline">
+    <label>
+      <input type="checkbox" name="square_crop" {% if settings.square_crop %}checked{% endif %} />
+      Square face crops when enrolling
+    </label>
+  </div>
+  <div class="stack-actions">
+    <button type="submit">Save</button>
+  </div>
+</form>
+{% endblock %}

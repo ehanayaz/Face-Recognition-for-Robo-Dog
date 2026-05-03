@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Home</h1>
+<p class="lead">Train a PCA model on family faces, then use live recognition on your robot.</p>
+
+<div class="card">
+  <p class="muted" style="margin:0 0 0.75rem;">Model status</p>
+  {% if model_ok %}
+  <p style="margin:0;"><span class="badge">Model ready</span> You can open <a href="/live">Live</a>.</p>
+  {% else %}
+  <p style="margin:0;"><span class="badge">No model yet</span> Add an <a href="/enroll?role=owner">owner</a> or <a href="/enroll?role=member">member</a> with photos.</p>
+  {% endif %}
+</div>
+
+<p class="hint">Use <strong>Add owner</strong> / <strong>Add member</strong> to upload photos (or a zip). Faces are detected automatically; you review crops before saving.</p>
+{% endblock %}

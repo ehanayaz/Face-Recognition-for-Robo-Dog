@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{% if role == "owner" %}Add owner{% else %}Add member{% endif %}</h1>
+<p class="lead">Upload images containing faces. Use multiple files or one .zip archive.</p>
+
+{% if error %}
+<div class="alert error">{{ error }}</div>
+{% endif %}
+
+<form method="post" action="/enroll" enctype="multipart/form-data" class="card">
+  <div class="row inline">
+    <label><input type="radio" name="role" value="owner" {% if role == "owner" %}checked{% endif %} /> Owner</label>
+    <label><input type="radio" name="role" value="member" {% if role == "member" %}checked{% endif %} /> Member</label>
+  </div>
+  <div class="row">
+    <label for="display_name">Display name</label>
+    <input type="text" id="display_name" name="display_name" required placeholder="e.g. Alice" autocomplete="off" />
+  </div>
+  <fieldset class="upload-zone">
+    <legend>Photos</legend>
+    <div class="row">
+      <input type="file" name="files" multiple accept="image/*,.zip,application/zip" />
+    </div>
+    <p class="hint">PNG, JPEG, WebP, BMP, or a zip of those formats.</p>
+  </fieldset>
+  <div class="stack-actions">
+    <button type="submit">Detect faces</button>
+    <a class="btn ghost" href="/">Cancel</a>
+  </div>
+</form>
+{% endblock %}

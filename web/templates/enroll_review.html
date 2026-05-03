@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Review faces</h1>
+<p class="lead">Saving to folder <strong>{{ class_folder }}</strong>. Uncheck faces you do not want to keep.</p>
+
+<form method="post" action="/enroll/confirm">
+  <input type="hidden" name="enroll_id" value="{{ enroll_id }}" />
+  <div class="card face-grid">
+    {% for name in crops %}
+    <div class="face-row">
+      <img src="/enroll/preview/{{ enroll_id }}/{{ name }}" alt="Face crop" width="100" height="100" />
+      <span class="muted">{{ name }}</span>
+      <label class="keep">
+        <input type="checkbox" name="keep" value="{{ loop.index0 }}" checked />
+        Keep
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="stack-actions">
+    <button type="submit">Save selected &amp; train</button>
+    <a class="btn ghost" href="/enroll?role=owner">Back</a>
+  </div>
+</form>
+{% endblock %}
